@@ -1,55 +1,104 @@
+#include<algorithm>
 #include<iostream>
 #include<vector>
 #include<unordered_set>
 #include<utility>
 #include<queue>
 #include<climits>
+#include<stack>
 
 
 using namespace std;
 
 class Graph {
     private:
-        vector<pair<int, vector<int>>> adjList;
+        vector<vector<int>> adjList;
+        vector<int> parent;
+        vector<pair<int,int>> timeInOut;
     public:
 
-        Graph(bool directed = false) {
-            for (auto vertex: adjList) {
-                int u = vertex.first;
-                vector<int> neighbors = vertex.second;
-                for (int v : neighbors) {
+        Graph(vector<pair<int, vector<int>>> edgeList, int vertices, bool directed = false) {
+            adjList.resize(vertices);
+            parent.resize(vertices);
+            for (int i = 0; i < edgeList.size(); i++) {
+                cout << "i: " << i;
+                int u = edgeList[i].first;
+                cout << " u: " << u;
+                for (int v : edgeList[i].second) {
+                    cout << " v: " << v << endl;
                     addEdge(u, v, directed);
                 }
             }
         }
 
-        vector<pair<int, vector<int>>>& getAdjList() {
+        vector<vector<int>>& getAdjList() {
             return adjList;
         }
 
         void addEdge(int u, int v, bool directed = false) {
-            adjList[u].second.push_back(v);
+            adjList[u].push_back(v);
             if (!directed) {
-                adjList[v].second.push_back(u);
+                adjList[v].push_back(u);
             }
         }
 
         void printGraph() {
-            for (auto vertex: adjList) {
-                cout << vertex.first << " -> ";
-                for (int neighbor: vertex.second) {
-                    cout << neighbor << " ";
+            for (int i = 0; i < adjList.size(); i++) {
+                cout << i << " -> ";
+                for (int neighbor : adjList[i]) {
+                    cout << neighbor << ", ";
                 }
                 cout << endl;
             }
         }
 
-        void bfs() {
-            // breadth first search
+        void bfs(int start) {
+            queue<int> q;
+            unordered_set<int> visited;
+            parent[start] = -1;
+            visited.insert(start);
+            q.push(start);
+            while (!q.empty()) {
+                int front = q.front();
+                q.pop();
+                for (auto neighbor : adjList[front]) {
+                    if (visited.find(neighbor) == visited.end()) {
+                        visited.insert(neighbor);
+                        parent[neighbor] = front;
+                        cout << "Parent of " << neighbor << " = " << front << endl;
+                        q.push(neighbor);
+                    }
+                }
+            }
+            cout << "Visited all " << visited.size() << " vertices in BFS" << endl;
         }
 
         void bft() {
-            // breadth first tree
+            
+        }
+        
+        void dfs(int start) {
+            // stack<int> only for active vertices; next[u] is how far we scanned adj[u]
+            // (same DFS tree as recursive: finish one branch before the next neighbor).
+            unordered_set<int> visited;
+            stack<int> st;
+            st.push(start);
+            visited.insert(start);
+            while (!st.empty()) {
+                int u = st.top();
+                st.pop();
+
+                for (auto it = adjList[u].rbegin(); it != adjList[u].rend(); it++) {
+                    int neighbor = *it;
+                    if (visited.find(neighbor) == visited.end()) {
+                        visited.insert(neighbor);
+                        parent[neighbor] = u;
+                        st.push(neighbor);
+                        cout << "parent of " << neighbor << " = " << u << endl;
+                    }
+                }
+            }
+            cout << "Visited all " << visited.size() << " vertices in DFS" << endl;
         }
 };
 
@@ -114,10 +163,10 @@ int main() {
     cout << "In main" << endl;
     vector<pair<int, vector<int>>> undirected_graph = {
         {1, {5, 2, 4}},
-        {2, {1, 5, 3, 4}},
-        {3, {2, 5, 4}},
-        {4, {2, 1}},
-        {5, {1, 2, 3}}
+        {2, { 5, 3, 4}},
+        {3, {5}},
+        {4, {}},
+        {5, {}}
     };
     /*
     1 -> 5, 2, 4 
@@ -193,10 +242,14 @@ int main() {
     5 -> 2
     */
 
-    WeightedGraph wg(acylic_weighted_graph, 4,  true);
-    cout << "Created wg" << endl;
-    cout << "dijikstra sd b/w 1 & 3 ' " << wg.dijkstra(1, 3) << endl;
+    // WeightedGraph wg(acylic_weighted_graph, 4,  true);
+    // cout << "Created wg" << endl;
+    // cout << "dijikstra sd b/w 1 & 3 ' " << wg.dijkstra(1, 3) << endl;
 
+    Graph undirectedGraph(undirected_graph, 6, false);
+    undirectedGraph.printGraph();
+    undirectedGraph.bfs(1);
+    undirectedGraph.dfs(1);
 
     return 0;
 }
